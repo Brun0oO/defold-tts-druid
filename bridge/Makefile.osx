@@ -1,0 +1,35 @@
+LIBPATH := ../tts/lib/x86_64-osx/libttsbridge.a
+
+
+
+SOURCES = 
+
+OBJC_SOURCES = \
+	src/tts_darwin.m
+
+HEADERS = src/tts_bridge.h
+
+CFLAGS := -std=c11 -O3 -fvisibility=hidden -I./include -mmacosx-version-min=10.7
+
+all: $(LIBPATH)
+
+
+
+OBJECTS = $(patsubst src/%.c,build/osx-c-%.o,$(SOURCES))
+OBJECTS_OBJC = $(patsubst src/%.m,build/osx-m-%.o,$(OBJC_SOURCES))
+
+build/osx-c-%.o: src/%.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+build/osx-m-%.o: src/%.m $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS) $(OBJECTS_OBJC)
+	libtool -static $^ -o $@
+
+
+clean:
+	rm -f $(LIBPATH) build/osx-*.o
+
+
+.PHONY: all clean
