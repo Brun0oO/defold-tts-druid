@@ -47,3 +47,5 @@ luac.out
 # Specific to this project
 build/
 !tts/lib/**
+tts/lib/.DS_Store
+tts/lib/x86_64-osx/.DS_Store
