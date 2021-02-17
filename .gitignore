@@ -46,3 +46,4 @@ luac.out
 
 # Specific to this project
 build/
+!tts/lib/**
