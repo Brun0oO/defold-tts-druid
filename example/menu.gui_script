@@ -1,0 +1,150 @@
+local druid = require("druid.druid")
+local voice_label2identifier = {}
+
+local function button_speak_callback(self)
+	print("Speak has been clicked!")
+	text = self.input_text:get_text()
+	print(text)
+	TTS.speak(text)
+end
+local function button_pause_callback(self)
+	local text = "Pause"
+	if self.is_paused == true then
+		TTS.resume()
+		print("Resume has been  clicked!")
+	else
+		TTS.pause()
+		print("Pause has been  clicked!")
+		text = "Resume"
+	end
+	gui.set_text(self.pause_button, text)
+	self.is_paused = not self.is_paused
+end
+local function button_stop_callback(self)
+	TTS.stop()
+	print("Stop has been  clicked!")
+end
+
+local function on_window_callback(self, event, data)
+	druid.on_window_callback(event, data)
+end
+
+
+local function select_dynamic_voice(self, index, label, button, is_shift_left)
+	self.selected_index_voice = index
+	gui.set_text(self.selected_voice_value, label)
+	local identifier = voice_label2identifier[label]
+	local result = TTS.setVoice(identifier)
+	print( "current voice : "..TTS.getVoice())
+end
+
+
+
+local function add_voice_dynamic(self, index, is_shift_left, label)
+	local prefab = gui.clone_tree(self.prefab_dynamic)
+	local node = prefab[hash("available_voices_prefab")] 
+	local text = prefab[hash("available_voice_prefab_label")] 
+	gui.set_text(text, label)
+	gui.set_enabled(node, true)
+	gui.set_size(node, vmath.vector3(450, 60, 0))
+	self.available_voices_grid:add(node, index, is_shift_left)
+
+	local button = self.druid:new_button(node, function(_, params, button)
+		select_dynamic_voice(self, index, label, button)
+	end)
+	button.on_long_click:subscribe(function()
+		select_dynamic_voice(self, index, label, button, true)
+	end)
+	button:set_click_zone(self.available_voices_scroll.view_node)
+	table.insert(self.dynamic_voice_buttons, button)
+	self.selected_voice_value = gui.get_node("selected_voice_value")
+
+	if index == 1 then
+		self.first_available_voice = node
+	end
+	if index == self.selected_index_voice  then
+		select_dynamic_voice(self, index, label)
+	end
+end
+
+local function init_available_voices_grid(self, available_voices, selected_index_voice)
+	self.selected_index_voice = selected_index_voice
+	self.dynamic_voice_buttons = {}
+
+	self.prefab_dynamic = gui.get_node("available_voices_prefab")
+	gui.set_enabled(self.prefab_dynamic, false)
+
+	for index, value in ipairs(available_voices) do
+		add_voice_dynamic(self, index, false, value)
+	end
+
+	local position = gui.get_position(self.first_available_voice)
+	self.available_voices_scroll:scroll_to(position)
+end
+
+
+
+function init(self)
+	self.druid = druid.new(self)
+	window.set_listener(on_window_callback)
+	self.druid:new_scroll("main_page", "scroll_page")
+	self.druid:new_button("speak/button", button_speak_callback)
+	self.druid:new_button("pause/button", button_pause_callback)
+	self.druid:new_button("stop/button", button_stop_callback)
+	self.is_paused = false
+	self.pause_button = gui.get_node("pause/text")
+	
+	local slider_rate = self.druid:new_slider("slider_rate_pin", vmath.vector3(95, 0, 0), function(_, value)
+		value = math.ceil(value*400.0)
+		TTS.setRate(value)
+		gui.set_text(gui.get_node("slider_rate_value"), value)
+	end)
+	local slider_pitch = self.druid:new_slider("slider_pitch_pin", vmath.vector3(95, 0, 0), function(_, value)
+		value = value*2.0
+		TTS.setPitch(value)
+		gui.set_text(gui.get_node("slider_pitch_value"), string.format("%.2f",value))
+	end)
+	local slider_volume = self.druid:new_slider("slider_volume_pin", vmath.vector3(95, 0, 0), function(_, value)
+		value = math.ceil(value*100)
+		TTS.setVolume(value)
+		gui.set_text(gui.get_node("slider_volume_value"), value)
+	end)
+	self.input_text = self.druid:new_input("input_box", "input_text")
+	slider_rate:set(0.5)
+	slider_pitch:set(0.5)
+	slider_volume:set(1.0)	
+	self.input_text:set_text("Bonjour ! Encore une fois, bonjour à tous ! Merci d'être là...")
+
+	self.available_voices_grid = self.druid:new_dynamic_grid("available_voices_nodes")
+	self.available_voices_scroll = self.druid:new_scroll("available_voices_view", "available_voices_nodes")
+	:set_horizontal_scroll(false)
+	:bind_grid(self.available_voices_grid)
+	local available_voices = {}
+	voices = TTS.getAvailableVoices()
+	for i,t in ipairs(voices) do
+		voice_identifier = t[1]
+		voice_label = t[2].."  ("..t[3]..')'
+		table.insert(available_voices, voice_label)
+		voice_label2identifier[voice_label] = voice_identifier
+	end
+	init_available_voices_grid(self, available_voices, 1)
+end
+
+function final(self)
+	self.druid:final()
+end
+
+function on_message(self, message_id, message, sender)
+	self.druid:on_message(message_id, message, sender)
+end
+
+function update(self, dt)
+	self.druid:update(dt)
+	is_speaking = TTS.isSpeaking()
+	gui.set_text(gui.get_node("is_speaking_label"), string.format("Is speaking : %s", tostring(is_speaking)))
+end
+
+
+function on_input(self, action_id, action)
+	return self.druid:on_input(action_id, action)
+end
