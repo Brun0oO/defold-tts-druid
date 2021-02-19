@@ -4,7 +4,6 @@ local voice_label2identifier = {}
 local function button_speak_callback(self)
 	print("Speak has been clicked!")
 	text = self.input_text:get_text()
-	print(text)
 	TTS.speak(text)
 end
 local function button_pause_callback(self)

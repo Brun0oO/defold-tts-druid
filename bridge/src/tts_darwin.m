@@ -237,7 +237,7 @@ void tts_speak(const char* text) {
 // serialize speaking
 void tts_speakToFile(const char* text, const char* filename) {
 	if ( !tts_initialized ) return;
-#ifndef TARGET_OS_IPHONE
+#if !TARGET_OS_IPHONE
 	NSString *aText = [NSString stringWithUTF8String:text];
 	NSString *aFilename = [NSString stringWithUTF8String:filename];
 	NSURL *aURL = [[NSURL alloc]initFileURLWithPath:aFilename];
@@ -292,7 +292,7 @@ bool tts_setRate(float rate) {
 	tts_rate = rate;
 	if ( tts_rate < 0.0f ) tts_rate = 0.0f;
 	if ( tts_rate > 2.0f ) tts_rate = 2.0f;
-#ifndef TARGET_OS_IPHONE	
+#if !TARGET_OS_IPHONE	
 	// NSSpeechSynthesizer supports words per minute,
     // Human speech is 180 to 220.
     // Let 200 be the default.
@@ -314,7 +314,9 @@ bool tts_setPitch(float pitch) {
 	tts_pitch = pitch;
 	if ( tts_pitch < 0.0f ) tts_pitch = 0.0f;
 	if ( tts_pitch > 2.0f ) tts_pitch = 2.0f;
-#ifndef TARGET_OS_IPHONE
+fprintf(stderr, "avant setPicth %f\n", tts_pitch);
+#if !TARGET_OS_IPHONE
+fprintf(stderr, "après setPicth %f\n", tts_pitch);
     // The input is a float from 0.0 to 2.0, with 1.0 being the default.
     // Get the default pitch for this voice and modulate it by 50% - 150%.
     NSError* errorCode;
@@ -340,7 +342,7 @@ bool tts_setVolume(float volume) {
 	tts_volume = volume;
 	if ( tts_volume < 0.0f ) tts_volume = 0.0f;
 	if ( tts_volume > 1.0f ) tts_volume = 1.0f;
-#ifndef TARGET_OS_IPHONE
+#if !TARGET_OS_IPHONE
 	[pEngine->speechSynthesizer setObject:[NSNumber numberWithFloat:tts_volume]
                        			forProperty:NSSpeechVolumeProperty
                              	error:nil];

@@ -49,3 +49,5 @@ build/
 !tts/lib/**
 tts/lib/.DS_Store
 tts/lib/x86_64-osx/.DS_Store
+/.internal
+/build
