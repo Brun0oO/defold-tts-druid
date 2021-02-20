@@ -1,8 +1,9 @@
 local druid = require("druid.druid")
 local voice_label2identifier = {}
+local voice_identifier2index = {}
+local voice_identifier2label = {}
 
 local function button_speak_callback(self)
-	print("Speak has been clicked!")
 	text = self.input_text:get_text()
 	TTS.speak(text)
 end
@@ -10,10 +11,8 @@ local function button_pause_callback(self)
 	local text = "Pause"
 	if self.is_paused == true then
 		TTS.resume()
-		print("Resume has been  clicked!")
 	else
 		TTS.pause()
-		print("Pause has been  clicked!")
 		text = "Resume"
 	end
 	gui.set_text(self.pause_button, text)
@@ -21,20 +20,50 @@ local function button_pause_callback(self)
 end
 local function button_stop_callback(self)
 	TTS.stop()
-	print("Stop has been  clicked!")
+end
+
+local function button_print_callback(self)
+	print("Current TTS settings :")
+	local voice = TTS.getVoice()
+	print(" voice : ")
+	print("  identifier : "..voice.identifier)
+	print("  name       : "..voice.name)
+	print("  language   : "..voice.language)
+	print(" rate : "..tostring(TTS.getRate()))
+	print(" pitch : "..tostring(TTS.getPitch()))
+	print(" volume : "..tostring(TTS.getVolume()))
 end
 
 local function on_window_callback(self, event, data)
 	druid.on_window_callback(event, data)
 end
 
+local function select_voice_from_language(self, language)
+	voices = TTS.getAvailableVoices()
+	voice_identifier = nil
+	language = language:lower()
+	for i,t in ipairs(voices) do
+		if language == t.language:lower() then
+			voice_identifier = t.identifier
+			break
+		end
+	end
+	if voice_identifier ~= nil then
+		index = voice_identifier2index[voice_identifier]
+		label = voice_identifier2label[voice_identifier]
+		self.selected_index_voice = index
+		gui.set_text(self.selected_voice_value, label)
+		return TTS.setVoice(voice_identifier)
+	else
+		return false
+	end
+end
 
 local function select_dynamic_voice(self, index, label, button, is_shift_left)
 	self.selected_index_voice = index
 	gui.set_text(self.selected_voice_value, label)
 	local identifier = voice_label2identifier[label]
 	local result = TTS.setVoice(identifier)
-	print( "current voice : "..TTS.getVoice())
 end
 
 
@@ -56,7 +85,7 @@ local function add_voice_dynamic(self, index, is_shift_left, label)
 	end)
 	button:set_click_zone(self.available_voices_scroll.view_node)
 	table.insert(self.dynamic_voice_buttons, button)
-	self.selected_voice_value = gui.get_node("selected_voice_value")
+	
 
 	if index == 1 then
 		self.first_available_voice = node
@@ -64,6 +93,9 @@ local function add_voice_dynamic(self, index, is_shift_left, label)
 	if index == self.selected_index_voice  then
 		select_dynamic_voice(self, index, label)
 	end
+	local identifier = voice_label2identifier[label]
+	voice_identifier2index[identifier] = index
+	voice_identifier2label[identifier] = label
 end
 
 local function init_available_voices_grid(self, available_voices, selected_index_voice)
@@ -73,6 +105,8 @@ local function init_available_voices_grid(self, available_voices, selected_index
 	self.prefab_dynamic = gui.get_node("available_voices_prefab")
 	gui.set_enabled(self.prefab_dynamic, false)
 
+	self.selected_voice_value = gui.get_node("selected_voice_value")
+	
 	for index, value in ipairs(available_voices) do
 		add_voice_dynamic(self, index, false, value)
 	end
@@ -90,6 +124,7 @@ function init(self)
 	self.druid:new_button("speak/button", button_speak_callback)
 	self.druid:new_button("pause/button", button_pause_callback)
 	self.druid:new_button("stop/button", button_stop_callback)
+	self.druid:new_button("print/button", button_print_callback)
 	self.is_paused = false
 	self.pause_button = gui.get_node("pause/text")
 	
@@ -113,7 +148,7 @@ function init(self)
 	slider_pitch:set(0.5)
 	slider_volume:set(1.0)	
 	self.input_text:set_text("Bonjour ! Encore une fois, bonjour à tous ! Merci d'être là...")
-
+	
 	self.available_voices_grid = self.druid:new_dynamic_grid("available_voices_nodes")
 	self.available_voices_scroll = self.druid:new_scroll("available_voices_view", "available_voices_nodes")
 	:set_horizontal_scroll(false)
@@ -121,12 +156,16 @@ function init(self)
 	local available_voices = {}
 	voices = TTS.getAvailableVoices()
 	for i,t in ipairs(voices) do
-		voice_identifier = t[1]
-		voice_label = t[2].."  ("..t[3]..')'
+		voice_identifier = t.identifier
+		voice_label = t.name.."  ("..t.language..')'
 		table.insert(available_voices, voice_label)
 		voice_label2identifier[voice_label] = voice_identifier
 	end
 	init_available_voices_grid(self, available_voices, 1)
+
+	-- set current voice from language (the first one using the given language)
+	select_voice_from_language(self, 'fr-fr')
+		
 end
 
 function final(self)

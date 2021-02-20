@@ -10,9 +10,9 @@ extern "C" {
     int myAdd(int, int);
 
     typedef struct {
-        const char* name;
-        const char* lang;
         const char* identifier;
+        const char* name;
+        const char* language;
     } tts_VoiceData;
     
     bool tts_init();
@@ -48,7 +48,7 @@ extern "C" {
     // set the current voice using a string identifier (see tts_getAvailableVoices)
     bool tts_setVoice(const char* voiceId); 
     // get the current voice
-    const char* tts_getVoice();
+    tts_VoiceData tts_getVoice();
     // get the list of available voices through a dedicated struct and a pseudo iterator mechanism
     tts_VoiceData* tts_getFirstAvailableVoice(); 
     tts_VoiceData* tts_getNextAvailableVoice(); 

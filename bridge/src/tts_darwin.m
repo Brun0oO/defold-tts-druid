@@ -29,10 +29,10 @@ static AVSpeechSynthesisVoice*	tts_voice = NULL;
 static float 					tts_rate = 1.0f;
 static float 					tts_volume = 1.0f;
 static float 					tts_pitch = 1.0f;
+static int						tts_basePitch = 48;
 static void* 					tts_callback = NULL;
 static bool						tts_initialized = false;
 static bool						tts_paused = false;
-
 
 static tts_VoiceData*			tts_availableVoiceData_buffer = NULL;
 static int						tts_availableVoiceData_count = 0;
@@ -46,7 +46,7 @@ typedef struct Engine {
 } Engine;
 static Engine* pEngine = NULL;
 
-
+static tts_VoiceData emptyVoiceData = {"","",""};
 
 
 // some references used in this code :
@@ -89,16 +89,16 @@ void tts_allocAvailableVoices() {
 
 		const char* cIdendifier = [voiceIdentifier UTF8String];
 		const char* cName = [name UTF8String];
-		const char* cLang = [lang UTF8String];
+		const char* cLanguage = [lang UTF8String];
 		
 
 		char* p = malloc(strlen(cName) + 1);
 		strcpy(p, cName);
 		tts_availableVoiceData_buffer[index].name = (const char*) p;
 
-		p = malloc(strlen(cLang) + 1);
-		strcpy(p, cLang);
-		tts_availableVoiceData_buffer[index].lang = (const char*) p;
+		p = malloc(strlen(cLanguage) + 1);
+		strcpy(p, cLanguage);
+		tts_availableVoiceData_buffer[index].language = (const char*) p;
 
 		p = malloc(strlen(cIdendifier) + 1);
 		strcpy(p, cIdendifier);
@@ -150,21 +150,21 @@ void tts_allocAvailableVoices() {
 		// Get const char* pointers from NSString
 		const char* cIdendifier = [voiceIdentifier UTF8String];
 		const char* cName = [name UTF8String];
-		const char* cLang = [lang UTF8String];
+		const char* cLanguage = [lang UTF8String];
 		
 		// Some dynamic allocations are needed here (will be destroyed with a tts_freeAvailableVoices call)
 		char* pName = malloc(strlen(cName) + 1);
-		char* pLang = malloc(strlen(cLang) + 1);
+		char* pLanguage = malloc(strlen(cLanguage) + 1);
 		char* pIdentifier = malloc(strlen(cIdendifier) + 1);
 
 		// Copy strings to the allocated memory
 		strcpy(pName, cName);
-		strcpy(pLang, cLang);
+		strcpy(pLanguage, cLanguage);
 		strcpy(pIdentifier, cIdendifier);
 
 		// Update the internal buffer
 		tts_availableVoiceData_buffer[index].name = (const char*) pName;
-		tts_availableVoiceData_buffer[index].lang = (const char*) pLang;
+		tts_availableVoiceData_buffer[index].language = (const char*) pLanguage;
 		tts_availableVoiceData_buffer[index].identifier = (const char*) pIdentifier;
 
 		index += 1;
@@ -176,7 +176,7 @@ void tts_allocAvailableVoices() {
 void tts_freeAvailableVoices() {
 	for (int i=0; i<tts_availableVoiceData_count; i++) {
 		free((char*) tts_availableVoiceData_buffer[i].name);
-		free((char*) tts_availableVoiceData_buffer[i].lang);
+		free((char*) tts_availableVoiceData_buffer[i].language);
 		free((char*) tts_availableVoiceData_buffer[i].identifier);
 	}
 	free(tts_availableVoiceData_buffer);
@@ -184,6 +184,7 @@ void tts_freeAvailableVoices() {
 	tts_availableVoiceData_count = 0;
 }
 
+void tts_initPitch();
 
 // initiliaze the speech engine
 bool tts_init() {
@@ -193,9 +194,11 @@ bool tts_init() {
 		return tts_initialized;
     pEngine->currentLocale = pEngine->lastString = @"";
     pEngine->speechSynthesizer = [[NSSpeechSynthesizer alloc] init];
-
 	tts_allocAvailableVoices();
 	tts_initialized = true;
+	tts_setVoice(NULL); // set to default voice
+	tts_initPitch();
+	
 	return tts_initialized;
 }
 // finalize the speech engine
@@ -307,6 +310,16 @@ float tts_getRate() {
 	if ( !tts_initialized ) return -1.0f;
 	return tts_rate;
 }
+void tts_initPitch() {
+	if ( !tts_initialized ) return;
+	// get the default pitch (this is an int here)
+	NSError* errorCode;
+    NSNumber* defaultPitchObj = [pEngine->speechSynthesizer objectForProperty:NSSpeechPitchBaseProperty
+                                         error:&errorCode];
+	tts_basePitch = defaultPitchObj ? [defaultPitchObj intValue] : 48;
+	tts_setPitch(1.0);
+}
+
 // set the pitch voice
 bool tts_setPitch(float pitch) {
 	if ( !tts_initialized ) return false;
@@ -314,16 +327,10 @@ bool tts_setPitch(float pitch) {
 	tts_pitch = pitch;
 	if ( tts_pitch < 0.0f ) tts_pitch = 0.0f;
 	if ( tts_pitch > 2.0f ) tts_pitch = 2.0f;
-fprintf(stderr, "avant setPicth %f\n", tts_pitch);
 #if !TARGET_OS_IPHONE
-fprintf(stderr, "après setPicth %f\n", tts_pitch);
     // The input is a float from 0.0 to 2.0, with 1.0 being the default.
-    // Get the default pitch for this voice and modulate it by 50% - 150%.
-    NSError* errorCode;
-    NSNumber* defaultPitchObj = [pEngine->speechSynthesizer objectForProperty:NSSpeechPitchBaseProperty
-                                         error:&errorCode];
-	int defaultPitch = defaultPitchObj ? [defaultPitchObj intValue] : 48;
-	int newPitch = (int)(defaultPitch * (0.5 * tts_pitch + 0.5));
+    // use the default pitch for this voice and modulate it by 50% - 150%.
+	int newPitch = (int)(tts_basePitch * (0.5 * tts_pitch + 0.5));
     [pEngine->speechSynthesizer setObject:[NSNumber numberWithInt:newPitch]
                        			forProperty:NSSpeechPitchBaseProperty
                              	error:nil];
@@ -361,14 +368,21 @@ void tts_setCallback(void* func) {
 	tts_callback = func;
 }
 // set the current voice using a string identifier (see tts_getAvailableVoices)
+// if identifier is NULL then set with the first available voice, the default one
 bool tts_setVoice(const char* voiceId) {
 	if ( !tts_initialized ) return false;
 	bool result = false;
-	for (int i=0; i<tts_availableVoiceData_count; i++) {
-		if ( strcmp(tts_availableVoiceData_buffer[i].identifier, voiceId) == 0 ) {
-			tts_selectedVoiceData_index = i;
-			result = true;
-			break;
+	if (voiceId == NULL && tts_availableVoiceData_count > 0) {
+		tts_selectedVoiceData_index = 0;
+		voiceId = tts_availableVoiceData_buffer[tts_selectedVoiceData_index].identifier;
+		result = true;
+	} else {
+		for (int i=0; i<tts_availableVoiceData_count; i++) {
+			if ( strcmp(tts_availableVoiceData_buffer[i].identifier, voiceId) == 0 ) {
+				tts_selectedVoiceData_index = i;
+				result = true;
+				break;
+			}
 		}
 	}
 	if (result) {
@@ -382,10 +396,10 @@ bool tts_setVoice(const char* voiceId) {
 	return result;
 }
 // get the current voice
-const char* tts_getVoice() {
-	if ( !tts_initialized ) return "";
-	if ( tts_selectedVoiceData_index == -1) return "";
-	return tts_availableVoiceData_buffer[tts_selectedVoiceData_index].identifier;
+tts_VoiceData tts_getVoice() {
+	if ( !tts_initialized ) return emptyVoiceData;
+	if ( tts_selectedVoiceData_index == -1) return emptyVoiceData;
+	return tts_availableVoiceData_buffer[tts_selectedVoiceData_index];
 }
 
 // a pseudo iterator mechanism

@@ -194,8 +194,17 @@ static int GetVoice(lua_State* L)
     // The number of expected items to be on the Lua stack
     // once this struct goes out of scope
     DM_LUA_STACK_CHECK(L, 1);
-    const char* identifier = tts_getVoice();
-    lua_pushstring(L, identifier);
+    tts_VoiceData voiceData = tts_getVoice();
+    lua_newtable(L);
+    lua_pushstring(L, "identifier");
+    lua_pushstring(L, voiceData.identifier);
+    lua_settable(L, -3); 
+    lua_pushstring(L, "name");
+    lua_pushstring(L, voiceData.name);
+    lua_settable(L, -3); 
+    lua_pushstring(L, "language");
+    lua_pushstring(L, voiceData.language);
+    lua_settable(L, -3); 
     return 1;
 }
 
@@ -212,13 +221,13 @@ static int GetAvailableVoices(lua_State* L)
         count += 1;
         lua_pushnumber( L, count );
         lua_newtable(L);
-        lua_pushnumber(L, 1);
+        lua_pushstring(L, "name");
         lua_pushstring(L, voiceData->name);
         lua_settable(L,-3);
-        lua_pushnumber(L, 2);
-        lua_pushstring(L, voiceData->lang);
+        lua_pushstring(L, "language");
+        lua_pushstring(L, voiceData->language);
         lua_settable(L,-3);
-        lua_pushnumber(L, 3);
+        lua_pushstring(L, "identifier");
         lua_pushstring(L, voiceData->identifier);
         lua_settable(L,-3);               
         lua_settable(L,-3);

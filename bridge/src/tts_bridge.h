@@ -15,7 +15,7 @@
 typedef struct {
     const char* identifier;
     const char* name;
-    const char* lang;
+    const char* language;
 } tts_VoiceData;
 
 // initiliaze the speech engine
@@ -52,7 +52,7 @@ void tts_setCallback(void* func);
 // set the current voice using a string identifier (see tts_getAvailableVoices)
 bool tts_setVoice(const char* voiceId); 
 // get the current voice
-const char* tts_getVoice();
+tts_VoiceData tts_getVoice();
 // get the list of available voices through a dedicated struct and a pseudo iterator mechanism
 tts_VoiceData* tts_getFirstAvailableVoice(); 
 tts_VoiceData* tts_getNextAvailableVoice(); 
