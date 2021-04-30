@@ -16,7 +16,7 @@
 		static tts_VoiceData emptyVoiceData = {"","",""};
 
 		// initiliaze the speech engine
-		bool tts_init() { assert(1=2, "STOP HERE!"); return true; }
+		bool tts_init() { return true; }
 		// finalize the speech engine
 		void tts_shutdown() {}
 		// say something
@@ -231,14 +231,13 @@
 		// initiliaze the speech engine
 		bool tts_init() {
 			tts_initialized = false;
-		#if defined(DM_PLATFORM_IOS)			// DEBUG BRUNO
-			return tts_initialized;
-		#endif 
-			pEngine = (Engine*) malloc(sizeof(Engine));
-			if (!pEngine)
+			#if defined(DM_PLATFORM_IOS)			// DEBUG BRUNO
 				return tts_initialized;
-		    pEngine->currentLocale = pEngine->lastString = @"";
-		    pEngine->speechSynthesizer = [[NSSpeechSynthesizer alloc] init];
+			#endif 
+			pEngine = (Engine*) malloc(sizeof(Engine));
+			if (!pEngine) return tts_initialized;
+			pEngine->currentLocale = pEngine->lastString = @"";
+			pEngine->speechSynthesizer = [[NSSpeechSynthesizer alloc] init];
 			tts_allocAvailableVoices();
 			tts_initialized = true;
 			tts_setVoice(NULL); // set to default voice

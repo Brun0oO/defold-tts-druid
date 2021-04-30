@@ -5,30 +5,20 @@ If you have some improvements to bring the project, feel free to open a pull req
 Please stick to the indentation style used throughout the project (K&R-like).
 
 
-## Compiling the bridge library
 
-Most of the extension is implemented in a separately-compiled bridge library.
-When changing something, the bridge library must be recompiled for all the
-platforms affected by the change.
+## macOS & iOS
+The implementation is located in the **./tts/src/tts_darwin.mm** file.
 
-### macOS & iOS
-For both iOS and macOS, you'll need to install Xcode, open it, then accept the
-license agreement and let it install the command line tools. Then:
+Pay attention to the use of the **#if defined (DM\_PLATFORM\_IOS)** and **#if defined (DM\_PLATFORM\_OSX)** compilation directives ;o)
 
-```bash
-cd bridge
-make -f Makefile.osx
-make -f Makefile.ios
-```
-
-### Linux
+## Linux
 to be implemented !
 
-### Windows
+## Windows
 to be implemented !
 
-### Android
+## Android
 to be implemented !
 
-### HTML5
+## HTML5
 to be implemented !
