@@ -11,7 +11,18 @@ height = 900
 [project]
 title = TTS
 dependencies = https://github.com/Insality/druid/archive/master.zip
+write_log = 1
 
 [library]
 include_dirs = tts
+
+[ios]
+app_icon_76x76 = /example/assets/app_icons/icon_76.png
+app_icon_152x152 = /example/assets/app_icons/icon_152.png
+app_icon_167x167 = /example/assets/app_icons/icon_167.png
+app_icon_120x120 = /example/assets/app_icons/icon_120.png
+app_icon_180x180 = /example/assets/app_icons/icon_180.png
+icons_asset = /example/assets/Assets.car
+bundle_identifier = com.brun0oO.signapp
+bundle_name = signapp
 

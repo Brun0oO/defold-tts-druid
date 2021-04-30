@@ -1,2 +1,18 @@
 # C++ symbol in your extension
 name: "TTS"
+platforms:
+  arm64-ios:
+    context:
+      frameworks: ["AVFoundation"]
+
+  armv7-ios:
+    context:
+      frameworks: ["AVFoundation"]
+
+  x86_64-osx:
+    context:
+      frameworks: ["AVFoundation"]
+
+  x86-osx:
+    context:
+      frameworks: ["AVFoundation"]

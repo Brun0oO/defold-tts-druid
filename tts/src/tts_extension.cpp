@@ -6,8 +6,8 @@
 // include the Defold SDK
 #include <dmsdk/sdk.h>
 
-#if defined(DM_PLATFORM_IOS) || defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_ANDROID)
-#include "tts_bridge_interface.h"
+#if defined(DM_PLATFORM_IOS) || defined(DM_PLATFORM_OSX) // || defined(DM_PLATFORM_ANDROID)
+#include "tts_private.h"
 
 static int Speak(lua_State* L)
 {
@@ -16,30 +16,12 @@ static int Speak(lua_State* L)
     DM_LUA_STACK_CHECK(L, 0);
 
     int nbArgs = lua_gettop(L);
-    if (nbArgs == 0) {
-        return luaL_error(L, "expecting at least 1 argument");
+    if (nbArgs != 1) {
+        return luaL_error(L, "expecting 1 argument");
     }
 
     // Check and get parameter string (the first one) from stack
     char* text = (char*)luaL_checkstring(L, 1);
-
-    double rate = 0.5;
-    double pitch = 1.0;
-    double volume = 1.0;;
-    char* locale = (char*) "en-GB";
-
-    if (nbArgs>=2) {
-        rate = luaL_checknumber(L, 2);
-    }
-    if (nbArgs>=3) {
-        pitch = luaL_checknumber(L, 3);
-    }
-    if (nbArgs>=4) {
-        volume = luaL_checknumber(L, 4);
-    }
-    if (nbArgs>=5) {
-        locale = (char*) luaL_checkstring(L, 5);
-    }
 
     tts_speak(text);
     // Return 0 item   
@@ -280,6 +262,7 @@ dmExtension::Result InitializeTTS(dmExtension::Params* params)
     LuaInit(params->m_L);
     dmLogInfo("Registered %s Extension\n", MODULE_NAME);
     tts_init();
+    dmLogInfo("** after tts_init call **\n");
     return dmExtension::RESULT_OK;
 }
 

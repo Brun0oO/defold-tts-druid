@@ -111,8 +111,11 @@ local function init_available_voices_grid(self, available_voices, selected_index
 		add_voice_dynamic(self, index, false, value)
 	end
 
-	local position = gui.get_position(self.first_available_voice)
-	self.available_voices_scroll:scroll_to(position)
+	if self.first_available_voice ~= nil then
+		print("self.first_available_voice"..tostring(self.first_available_voice))
+		local position = gui.get_position(self.first_available_voice)
+		self.available_voices_scroll:scroll_to(position)
+	end
 end
 
 

@@ -1,20 +1,17 @@
-#ifndef TTS_BRIDGE_INTERFACE_H
-#define TTS_BRIDGE_INTERFACE_H
-
+#pragma once
 #include <stdbool.h>
+
 
 // Using C symbol naming convention to reduce the chance of
 // C++ compilers mangling symbols differently
 
-extern "C" {
-    int myAdd(int, int);
-
+extern "C++" {
     typedef struct {
         const char* identifier;
         const char* name;
         const char* language;
     } tts_VoiceData;
-    
+    // initialize the speech engine
     bool tts_init();
     // finalize the speech engine
     void tts_shutdown();
@@ -43,7 +40,7 @@ extern "C" {
     // get the volume
     float tts_getVolume();
     // set the callback to call when these events occur :
-    //
+    // .. to be implemented ...
     void tts_setCallback(void* func);
     // set the current voice using a string identifier (see tts_getAvailableVoices)
     bool tts_setVoice(const char* voiceId); 
@@ -54,4 +51,3 @@ extern "C" {
     tts_VoiceData* tts_getNextAvailableVoice(); 
 }
 
-#endif
