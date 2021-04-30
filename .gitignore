@@ -51,3 +51,6 @@ tts/lib/.DS_Store
 tts/lib/x86_64-osx/.DS_Store
 /.internal
 /build
+/products
+log.txt
+.DS_Store
