@@ -86,7 +86,7 @@ static int SetRate(lua_State* L)
         return luaL_error(L, "expecting 1 argument");
     }
 
-    double rate = luaL_checknumber(L, 1) / 200.0f;
+    double rate = luaL_checknumber(L, 1) / 400.0f;
     tts_setRate(rate);
     
     return 0;
@@ -97,7 +97,7 @@ static int GetRate(lua_State* L)
     // once this struct goes out of scope
     DM_LUA_STACK_CHECK(L, 1);
 
-    double rate = tts_getRate() * 200.0f;
+    double rate = tts_getRate() * 400.0f;
     lua_pushnumber(L, rate);
     
     return 1;
